@@ -1,0 +1,112 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<div class='row'>
+  <div class='col-md-8'>
+    <div id='map-canvas' style='height:500px' style='border:solid 1px black'></div>
+  </div>
+  <div class='col-md-4'>
+
+    {% include 'selectors.html' %}
+    {% include 'trip.html' %}
+
+  </div>
+</div>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAkarjA8hlysMC5aK7ywsrUwYY6UwpnXG0&sensor=true"></script>
+<script>
+  $(document).ready(function() {
+    var map = initialize_gmaps();
+
+    {% autoescape false %}
+    // note to instructors: next iteration, change `all_xyz` to `templateXyz`
+    var hotels = {{ hotels | json }};
+    var restaurants = {{ restaurants | json }};
+    var activities = {{ activities | json }};
+    {% endautoescape %}
+
+    var dataObj = {hotels: hotels, restaurants: restaurants, activities: activities};
+
+    ["hotels", "restaurants", 'activities'].forEach(function(category){
+      var id = "#" + category + "Button";
+      $(id).on("click", function(){
+        console.log(id + " was clicked");
+
+        var value = $("#" + category + "Chooser" + " option:selected");
+        var selectedValue = value;
+        var selectedId = value[0].value;
+        console.log("Selected Value: ", selectedValue.text(), "\nSelected Value ID: ", selectedId);
+
+        var categoryToSearch = dataObj[category];
+        categoryToSearch.forEach(function(dataEntry){
+          if(dataEntry._id === selectedId){
+            addItem(map, category, dataEntry);
+          }
+        });
+      })
+    })
+  });
+
+  function addItem(map, category, dataEntry){
+    console.log("Full Object: ", dataEntry);
+    console.log("Coordinates: ", dataEntry.place.location);
+
+    var categoryDiv = "#trip-" + category
+    $(categoryDiv).append(
+      "<p id='listing-" + dataEntry._id +"'>" + dataEntry.name + 
+      "<button id='remove-" + dataEntry._id + "' class='btn btn-xs btn-danger removeItem'>Remove</button>" + "</p>");
+    $(categoryDiv).append()
+
+    var marker = new google.maps.Marker({
+      position: new google.maps.LatLng(
+        dataEntry.place.location[0],
+        dataEntry.place.location[1]),
+      title:dataEntry.name
+    });
+    marker.setMap(map);
+
+    //Set removeItem on click for newly created remove button.
+    //Handles: marker, htmlString
+
+    /* Not yet functional
+    $(categoryDiv).on(
+      "click",
+      "remove-" + dataEntry._id,
+      {test: "5"},
+      removeItem);
+    */
+  }
+
+  function removeItem(){
+    console.log("Hi", event);
+    // marker.setMap(null);
+    // $("#" + "listing-" + id)
+  }
+
+  function initialize_gmaps() {
+      // initialize new google maps LatLng object
+      var myLatlng = new google.maps.LatLng(40.705189,-74.009209);
+      // set the map options hash
+      var mapOptions = {
+          center: myLatlng,
+          zoom: 16,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+      };
+      // get the maps div's HTML obj
+      var map_canvas_obj = document.getElementById("map-canvas");
+      console.log(map_canvas_obj);
+      // initialize a new Google Map with the options
+      var map = new google.maps.Map(map_canvas_obj, mapOptions);
+      return map;
+
+      // Add the marker to the map
+      var marker = new google.maps.Marker({
+          position: myLatlng,
+          title:"Hello World!"
+      });
+      marker.setMap(map);
+  }
+
+</script>
+
+
+{% endblock %}
