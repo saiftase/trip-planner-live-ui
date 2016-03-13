@@ -18,7 +18,6 @@
     var map = initialize_gmaps();
 
     {% autoescape false %}
-    // note to instructors: next iteration, change `all_xyz` to `templateXyz`
     var hotels = {{ hotels | json }};
     var restaurants = {{ restaurants | json }};
     var activities = {{ activities | json }};
@@ -27,6 +26,8 @@
     var dataObj = {hotels: hotels, restaurants: restaurants, activities: activities};
 
     ["hotels", "restaurants", 'activities'].forEach(function(category){
+
+      //Set add handlers
       var id = "#" + category + "Button";
       $(id).on("click", function(){
         console.log(id + " was clicked");
@@ -43,6 +44,18 @@
           }
         });
       })
+
+      //Set remove handlers
+      // var containerId = "#" + "trip-" + category;
+      // dataObj[category].forEach(function(dataEntry){
+      //   console.log(containerId)
+      //   $(containerId).on(
+      //     "click",
+      //     "#" + "remove-" + dataEntry._id,
+      //     {test: 5},
+      //     removeItem);
+      // });
+
     })
   });
 
@@ -67,19 +80,18 @@
     //Set removeItem on click for newly created remove button.
     //Handles: marker, htmlString
 
-    /* Not yet functional
+    //Not yet functional
     $(categoryDiv).on(
       "click",
-      "remove-" + dataEntry._id,
-      {test: "5"},
+      "#" + "remove-" + dataEntry._id,
+      {marker: marker, id: dataEntry._id},
       removeItem);
-    */
+    
   }
 
-  function removeItem(){
-    console.log("Hi", event);
-    // marker.setMap(null);
-    // $("#" + "listing-" + id)
+  function removeItem(obj){
+    obj.data.marker.setMap(null);
+    $("#" + "listing-" + obj.data.id).remove();
   }
 
   function initialize_gmaps() {
