@@ -96,8 +96,10 @@ var markers = [];
         removeItem);
 
       //Save data
-      markers.push(marker);
-      savedData[getCurrentDay() - 1].push(dataToSave)
+      if(!repopulate){
+        markers.push(marker);
+        savedData[getCurrentDay() - 1].push(dataToSave)
+      } 
     }
     
   }
