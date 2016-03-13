@@ -62,36 +62,48 @@ var markers = [];
     console.log("Full Object: ", dataEntry);
     console.log("Coordinates: ", dataEntry.place.location);
 
-    var categoryDiv = "#trip-" + category
-    var addedHTML = "<p id='listing-" + dataEntry._id +"'>" + dataEntry.name + "<button id='remove-" + dataEntry._id + "' class='btn btn-xs btn-danger removeItem'>Remove</button>" + "</p>"
-    $(categoryDiv).append(addedHTML);
-
-    var marker = new google.maps.Marker({
-      position: new google.maps.LatLng(
-        dataEntry.place.location[0],
-        dataEntry.place.location[1]),
-      title:dataEntry.name
-    });
-    marker.setMap(map);
-
-    //Add item to saved data for day
-    savedData[getCurrentDay() - 1].push({
+    var dataToSave = {
       map: map,
       category: category,
-      dataEntry: dataEntry
-    })
-    markers.push(marker);
+      dataEntry: dataEntry 
+    }
 
-    //Set removeItem on click for newly created remove button.
-    $(categoryDiv).on(
-      "click",
-      "#" + "remove-" + dataEntry._id,
-      {marker: marker, id: dataEntry._id},
-      removeItem);
+    var repopulate = Array.prototype.slice.call(arguments)[3] === true;
+    var existsAt = savedData[getCurrentDay() - 1].map(function(obj){
+      return obj.dataEntry._id === dataToSave.dataEntry._id
+    }).indexOf(true);
 
+    if (existsAt < 0 || repopulate){
+      //Add to list of items
+      var categoryDiv = "#trip-" + category
+      var addedHTML = "<p id='listing-" + dataEntry._id +"'>" + dataEntry.name + "<button id='remove-" + dataEntry._id + "' class='btn btn-xs btn-danger removeItem'>Remove</button>" + "</p>"
+      $(categoryDiv).append(addedHTML);
 
-    console.log(savedData);
+      //Add marker
+      var marker = new google.maps.Marker({
+        position: new google.maps.LatLng(
+          dataEntry.place.location[0],
+          dataEntry.place.location[1]),
+        title:dataEntry.name
+      });
+      marker.setMap(map);
+
+      //Set removeItem on click for newly created remove button.
+      $(categoryDiv).on(
+        "click",
+        "#" + "remove-" + dataEntry._id,
+        {marker: marker, id: dataEntry._id},
+        removeItem);
+
+      //Save data
+      markers.push(marker);
+      savedData[getCurrentDay() - 1].push(dataToSave)
+    }
     
+  }
+
+  function entryExists(){
+    this.dataEntry
   }
 
   function removeItem(obj){
@@ -136,7 +148,7 @@ var markers = [];
   function populate(day){
     console.log("populate")
     savedData[day-1].map(function(thisDay){
-      addItem(thisDay.map, thisDay.category, thisDay.dataEntry);
+      addItem(thisDay.map, thisDay.category, thisDay.dataEntry, true);
     })
   }
 
