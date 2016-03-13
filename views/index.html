@@ -14,6 +14,9 @@
 </div>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAkarjA8hlysMC5aK7ywsrUwYY6UwpnXG0&sensor=true"></script>
 <script>
+var savedData = [[], [], []];
+var markers = [];
+
   $(document).ready(function() {
     var map = initialize_gmaps();
 
@@ -26,7 +29,6 @@
     var dataObj = {hotels: hotels, restaurants: restaurants, activities: activities};
 
     ["hotels", "restaurants", 'activities'].forEach(function(category){
-
       //Set add handlers
       var id = "#" + category + "Button";
       $(id).on("click", function(){
@@ -44,19 +46,16 @@
           }
         });
       })
-
-      //Set remove handlers
-      // var containerId = "#" + "trip-" + category;
-      // dataObj[category].forEach(function(dataEntry){
-      //   console.log(containerId)
-      //   $(containerId).on(
-      //     "click",
-      //     "#" + "remove-" + dataEntry._id,
-      //     {test: 5},
-      //     removeItem);
-      // });
-
     })
+
+  console.log($(".nav-pills").children());
+  $(".nav-pills").children().map(function(index, listItem){
+    var link = $(listItem.children[0]);
+    link.on("click", function(){
+      setCurrentDay(index + 1);
+    });
+  })    
+
   });
 
   function addItem(map, category, dataEntry){
@@ -64,10 +63,8 @@
     console.log("Coordinates: ", dataEntry.place.location);
 
     var categoryDiv = "#trip-" + category
-    $(categoryDiv).append(
-      "<p id='listing-" + dataEntry._id +"'>" + dataEntry.name + 
-      "<button id='remove-" + dataEntry._id + "' class='btn btn-xs btn-danger removeItem'>Remove</button>" + "</p>");
-    $(categoryDiv).append()
+    var addedHTML = "<p id='listing-" + dataEntry._id +"'>" + dataEntry.name + "<button id='remove-" + dataEntry._id + "' class='btn btn-xs btn-danger removeItem'>Remove</button>" + "</p>"
+    $(categoryDiv).append(addedHTML);
 
     var marker = new google.maps.Marker({
       position: new google.maps.LatLng(
@@ -77,21 +74,70 @@
     });
     marker.setMap(map);
 
-    //Set removeItem on click for newly created remove button.
-    //Handles: marker, htmlString
+    //Add item to saved data for day
+    savedData[getCurrentDay() - 1].push({
+      map: map,
+      category: category,
+      dataEntry: dataEntry
+    })
+    markers.push(marker);
 
-    //Not yet functional
+    //Set removeItem on click for newly created remove button.
     $(categoryDiv).on(
       "click",
       "#" + "remove-" + dataEntry._id,
       {marker: marker, id: dataEntry._id},
       removeItem);
+
+
+    console.log(savedData);
     
   }
 
   function removeItem(obj){
     obj.data.marker.setMap(null);
     $("#" + "listing-" + obj.data.id).remove();
+  }
+
+  function getCurrentDay(){
+    var dayId = $(".active")[0].id;
+    switch(dayId){
+      case "dayOne":
+        return 1;
+        break;
+      case "dayTwo":
+        return 2;
+        break;
+      case "dayThree":
+        return 3;
+        break;
+    }
+  }
+
+  function setCurrentDay(num){
+    $(".active").removeClass("active");
+    console.log("num", num)
+    $(".nav-pills li:nth-of-type(" + num + ")").addClass("active");
+    clear()
+    populate(num);
+  }
+
+  function clear(){
+    console.log("clear");
+    var blankHTML =
+    "<div id='trip-hotels'><b>Hotels: </b><br></div><br><div id='trip-restaurants'><b>Restaurants: </b><br></div><br><div id='trip-activities'><b>Activities: </b><br></div>";
+    $("#trip").html(blankHTML);
+
+    markers.forEach(function(marker){
+      marker.setMap(null);
+    })
+  }
+
+  function populate(day){
+    console.log("populate")
+    savedData[day-1].map(function(thisDay){
+      addItem(thisDay.map, thisDay.category, thisDay.dataEntry);
+    })
   }
 
   function initialize_gmaps() {

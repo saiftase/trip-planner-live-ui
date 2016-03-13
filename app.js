@@ -29,7 +29,8 @@ app.use(function(req, res, next){
 app.get('/', function(req, res, next){
   Promise.join(Hotel.find(), Restaurant.find(), Activity.find()) 
     .spread(function(hotels, restaurants, activities){
-      res.render('index', { title: 'Home', 
+      res.render('index', { 
+        title: 'Home', 
         hotels: hotels,
         restaurants: restaurants,
         activities: activities
